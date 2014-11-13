@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="info.androidhive.gpluslogin"
+    package="com.iesebre.dam2.pa201415.sergi"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -22,7 +22,7 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name="info.androidhive.gpluslogin.MainActivity"
+            android:name="com.iesebre.dam2.pa201415.sergi.MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
             <intent-filter>

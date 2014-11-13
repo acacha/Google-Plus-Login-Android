@@ -1,4 +1,4 @@
-package info.androidhive.gpluslogin;
+package com.iesebre.dam2.pa201415.sergi;
 
 import java.io.InputStream;
 
@@ -29,6 +29,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.model.people.Person;
+import com.iesebre.dam2.pa201415.sergi.R;
 
 public class MainActivity extends Activity implements OnClickListener,
 		ConnectionCallbacks, OnConnectionFailedListener {
@@ -79,7 +80,7 @@ public class MainActivity extends Activity implements OnClickListener,
 
 		mGoogleApiClient = new GoogleApiClient.Builder(this)
 				.addConnectionCallbacks(this)
-				.addOnConnectionFailedListener(this).addApi(Plus.API, null)
+				.addOnConnectionFailedListener(this).addApi(Plus.API)
 				.addScope(Plus.SCOPE_PLUS_LOGIN).build();
 	}
 
