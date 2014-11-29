@@ -3,6 +3,10 @@ package com.iesebre.dam2.pa201415.sergi;
 import java.io.InputStream;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender.SendIntentException;
 import android.graphics.Bitmap;
@@ -43,6 +47,8 @@ public class MainActivity extends Activity implements OnClickListener,
 
 	// Google client to interact with Google API
 	private GoogleApiClient mGoogleApiClient;
+	
+	private static final int DIALOG_PLAY_SERVICES_ERROR = 91;
 
 	/**
 	 * A flag indicating that a PendingIntent is in progress and prevents us
@@ -100,26 +106,70 @@ public class MainActivity extends Activity implements OnClickListener,
 	 * Method to resolve any signin errors
 	 * */
 	private void resolveSignInError() {
-		if (mConnectionResult.hasResolution()) {
-			try {
-				mIntentInProgress = true;
-				mConnectionResult.startResolutionForResult(this, RC_SIGN_IN);
-			} catch (SendIntentException e) {
-				mIntentInProgress = false;
-				mGoogleApiClient.connect();
+		
+		PendingIntent signInIntent  = mConnectionResult.getResolution();
+		if (signInIntent != null) {
+			if (mConnectionResult.hasResolution()) {
+				try {
+					mIntentInProgress = true;
+					mConnectionResult.startResolutionForResult(this, RC_SIGN_IN);
+				} catch (SendIntentException e) {
+					mIntentInProgress = false;
+					mGoogleApiClient.connect();
+				}
 			}
+		} else {
+			showDialog(DIALOG_PLAY_SERVICES_ERROR);
 		}
 	}
+	
+	@Override
+	  protected Dialog onCreateDialog(int id) {
+	    switch(id) {
+	      case DIALOG_PLAY_SERVICES_ERROR:
+	        if (GooglePlayServicesUtil.isUserRecoverableError(mConnectionResult.getErrorCode())) {
+	          return GooglePlayServicesUtil.getErrorDialog(
+	        		  mConnectionResult.getErrorCode(),
+	              this,
+	              RC_SIGN_IN,
+	              new DialogInterface.OnCancelListener() {
+	                @Override
+	                public void onCancel(DialogInterface dialog) {
+	                  Log.e(TAG, "Google Play services resolution cancelled");
+	                }
+	              });
+	        } else {
+	          return new AlertDialog.Builder(this)
+	              .setMessage(R.string.play_services_error)
+	              .setPositiveButton(R.string.close,
+	                  new DialogInterface.OnClickListener() {
+	                    @Override
+	                    public void onClick(DialogInterface dialog, int which) {
+	                      Log.e(TAG, "Google Play services error could not be "
+	                          + "resolved: " + mConnectionResult.getErrorCode());
+	                    }
+	                  }).create();
+	        }
+	      default:
+	        return super.onCreateDialog(id);
+	    }
+	  }
 
 	@Override
 	public void onConnectionFailed(ConnectionResult result) {
+		Log.i(TAG, "onConnectionFailed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
 		if (!result.hasResolution()) {
 			GooglePlayServicesUtil.getErrorDialog(result.getErrorCode(), this,
 					0).show();
 			return;
 		}
 
-		if (!mIntentInProgress) {
+		if (result.getErrorCode() == ConnectionResult.API_UNAVAILABLE) {
+	          // An API requested for GoogleApiClient is not available. The device's current
+	          // configuration might not be supported with the requested API or a required component
+	          // may not be installed, such as the Android Wear application. You may need to use a
+	          // second GoogleApiClient to manage the application's optional APIs.
+	    } else if (!mIntentInProgress) {
 			// Store the ConnectionResult for later usage
 			mConnectionResult = result;
 
@@ -130,7 +180,9 @@ public class MainActivity extends Activity implements OnClickListener,
 				resolveSignInError();
 			}
 		}
-
+		
+		Log.i(TAG, "onConnectionFailed end!");
+		//TODO: Sign OUT?
 	}
 
 	@Override
@@ -235,19 +287,21 @@ public class MainActivity extends Activity implements OnClickListener,
 	 * */
 	@Override
 	public void onClick(View v) {
-		switch (v.getId()) {
-		case R.id.btn_sign_in:
-			// Signin button clicked
-			signInWithGplus();
-			break;
-		case R.id.btn_sign_out:
-			// Signout button clicked
-			signOutFromGplus();
-			break;
-		case R.id.btn_revoke_access:
-			// Revoke access button clicked
-			revokeGplusAccess();
-			break;
+		if (!mGoogleApiClient.isConnecting()) {
+			switch (v.getId()) {
+			case R.id.btn_sign_in:
+				// Signin button clicked
+				signInWithGplus();
+				break;
+			case R.id.btn_sign_out:
+				// Signout button clicked
+				signOutFromGplus();
+				break;
+			case R.id.btn_revoke_access:
+				// Revoke access button clicked
+				revokeGplusAccess();
+				break;
+			}
 		}
 	}
 
@@ -256,6 +310,8 @@ public class MainActivity extends Activity implements OnClickListener,
 	 * */
 	private void signInWithGplus() {
 		if (!mGoogleApiClient.isConnecting()) {
+   		    // We only process button clicks when GoogleApiClient is not transitioning
+ 	        // between connected and not connected.
 			mSignInClicked = true;
 			resolveSignInError();
 		}
@@ -319,5 +375,7 @@ public class MainActivity extends Activity implements OnClickListener,
 			bmImage.setImageBitmap(result);
 		}
 	}
+	
+	
 
 }
