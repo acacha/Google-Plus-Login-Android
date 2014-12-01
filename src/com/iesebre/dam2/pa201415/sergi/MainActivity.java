@@ -10,7 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender.SendIntentException;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory; 
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -40,7 +40,7 @@ public class MainActivity extends Activity implements OnClickListener,
 
 	private static final int RC_SIGN_IN = 0;
 	// Logcat tag
-	private static final String TAG = "MainActivity";
+	private static final String TAG = "GooglePlusSignOn";
 
 	// Profile pic image size in pixels
 	private static final int PROFILE_PIC_SIZE = 400;
@@ -68,6 +68,7 @@ public class MainActivity extends Activity implements OnClickListener,
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		Log.e(TAG, "onCreate!");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
@@ -88,20 +89,26 @@ public class MainActivity extends Activity implements OnClickListener,
 				.addConnectionCallbacks(this)
 				.addOnConnectionFailedListener(this).addApi(Plus.API)
 				.addScope(Plus.SCOPE_PLUS_LOGIN).build();
+		
+		Log.e(TAG, "onCreate End!");
 	}
 
 	protected void onStart() {
+		Log.e(TAG, "onStart!");
 		super.onStart();
 		mGoogleApiClient.connect();
+		Log.e(TAG, "onStart end!");
 	}
 
 	protected void onStop() {
+		Log.e(TAG, "onStop!");
 		super.onStop();
 		if (mGoogleApiClient.isConnected()) {
 			mGoogleApiClient.disconnect();
 		}
 	}
-
+	
+	
 	/**
 	 * Method to resolve any signin errors
 	 * */
@@ -158,10 +165,19 @@ public class MainActivity extends Activity implements OnClickListener,
 	@Override
 	public void onConnectionFailed(ConnectionResult result) {
 		Log.i(TAG, "onConnectionFailed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
+		Log.i(TAG, "See error types in http://developer.android.com/reference/com/google/android/gms/common/ConnectionResult.html");
 		if (!result.hasResolution()) {
 			GooglePlayServicesUtil.getErrorDialog(result.getErrorCode(), this,
 					0).show();
 			return;
+		}
+		
+		if (result.getErrorCode() == ConnectionResult.SIGN_IN_REQUIRED) {
+			Log.i(TAG, "Error type: SIGN_IN_REQUIRED");
+		}
+		
+		if (result.getErrorCode() == ConnectionResult.NETWORK_ERROR ) {
+			Log.i(TAG, "Error type: NETWORK_ERROR ");
 		}
 
 		if (result.getErrorCode() == ConnectionResult.API_UNAVAILABLE) {
@@ -170,10 +186,12 @@ public class MainActivity extends Activity implements OnClickListener,
 	          // may not be installed, such as the Android Wear application. You may need to use a
 	          // second GoogleApiClient to manage the application's optional APIs.
 	    } else if (!mIntentInProgress) {
+	    	Log.i(TAG, "not IntentInProgress!");
 			// Store the ConnectionResult for later usage
 			mConnectionResult = result;
 
 			if (mSignInClicked) {
+				Log.i(TAG, "signInAlreadyClicked! Resolving sign error...");
 				// The user has already clicked 'sign-in' so we attempt to
 				// resolve all
 				// errors until the user is signed in, or they cancel.
@@ -244,7 +262,7 @@ public class MainActivity extends Activity implements OnClickListener,
 				String personGooglePlusProfile = currentPerson.getUrl();
 				String email = Plus.AccountApi.getAccountName(mGoogleApiClient);
 
-				Log.e(TAG, "Name: " + personName + ", plusProfile: "
+				Log.i(TAG, "Name: " + personName + ", plusProfile: "
 						+ personGooglePlusProfile + ", email: " + email
 						+ ", Image: " + personPhotoUrl);
 
@@ -365,7 +383,7 @@ public class MainActivity extends Activity implements OnClickListener,
 				InputStream in = new java.net.URL(urldisplay).openStream();
 				mIcon11 = BitmapFactory.decodeStream(in);
 			} catch (Exception e) {
-				Log.e("Error", e.getMessage());
+				Log.e(TAG, e.getMessage());
 				e.printStackTrace();
 			}
 			return mIcon11;
