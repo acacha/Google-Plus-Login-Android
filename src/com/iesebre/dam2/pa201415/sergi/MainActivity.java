@@ -102,10 +102,11 @@ public class MainActivity extends Activity implements OnClickListener,
 
 	protected void onStop() {
 		Log.e(TAG, "onStop!");
-		super.onStop();
+		
 		if (mGoogleApiClient.isConnected()) {
 			mGoogleApiClient.disconnect();
 		}
+		super.onStop();
 	}
 	
 	
@@ -358,6 +359,7 @@ public class MainActivity extends Activity implements OnClickListener,
 						@Override
 						public void onResult(Status arg0) {
 							Log.e(TAG, "User access revoked!");
+							mGoogleApiClient.disconnect();
 							mGoogleApiClient.connect();
 							updateUI(false);
 						}
